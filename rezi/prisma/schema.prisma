@@ -1,0 +1,75 @@
+// Resume Builder SaaS - Prisma Schema
+// Normalized structure: User owns Resumes; resume content stored as structured JSON
+// for flexibility (sections, order) while keeping queries simple.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Auth.js (NextAuth v5) expects these model names for the Prisma adapter
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?   // for credentials provider (hashed)
+  accounts      Account[]
+  sessions      Session[]
+  resumes       Resume[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+}
+
+// Resume: one per document. Content is structured JSON for flexibility.
+model Resume {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String   // e.g. "Software Engineer 2024"
+  slug      String   // URL-safe unique per user (e.g. "software-engineer-2024")
+  content   Json     // ResumeContent type; see src/lib/resume-types.ts
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, slug])
+  @@index([userId])
+}
