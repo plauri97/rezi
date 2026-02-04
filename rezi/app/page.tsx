@@ -1,25 +1,29 @@
+"use client"; // client-side redirect
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { auth } from "@/auth";
-import { logout } from "@/app/actions/auth";
-import { redirect } from "next/navigation";
+import { useSession } from "@/auth"; // client-side hook, jei naudojama
 
-export default async function HomePage() {
-  const session = await auth();
+export default function HomePage() {
+  const router = useRouter();
+  const session = useSession(); // client-side session
 
-  // Jei vartotojas prisijungęs → redirect į /dashboard
-  if (session?.user) {
-    redirect("/dashboard");
-  }
+  // Jei prisijungęs → nukreipti į dashboard
+  useEffect(() => {
+    if (session?.user) {
+      router.push("/dashboard");
+    }
+  }, [session, router]);
 
+  // Landing page turinys
   return (
     <div className="min-h-screen flex flex-col">
       <header className="border-b">
         <div className="container mx-auto px-4 h-14 flex items-center justify-between">
-          <Link href="/" className="font-semibold text-lg">
-            Resume Builder
-          </Link>
-          <nav className="flex items-center gap-4">
+          <h1 className="font-semibold text-lg">Resume Builder</h1>
+          <nav className="flex gap-4">
             <Link href="/login">
               <Button variant="ghost">Log in</Button>
             </Link>
