@@ -2,9 +2,16 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/auth";
 import { logout } from "@/app/actions/auth";
+import { redirect } from "next/navigation";
 
 export default async function HomePage() {
   const session = await auth();
+
+  // Jei vartotojas prisijungęs → redirect į /dashboard
+  if (session?.user) {
+    redirect("/dashboard");
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <header className="border-b">
@@ -13,27 +20,12 @@ export default async function HomePage() {
             Resume Builder
           </Link>
           <nav className="flex items-center gap-4">
-            {session?.user ? (
-              <>
-                <Link href="/dashboard">
-                  <Button variant="ghost">Dashboard</Button>
-                </Link>
-                <form action={logout}>
-                  <Button type="submit" variant="outline">
-                    Sign out
-                  </Button>
-                </form>
-              </>
-            ) : (
-              <>
-                <Link href="/login">
-                  <Button variant="ghost">Log in</Button>
-                </Link>
-                <Link href="/register">
-                  <Button>Get started</Button>
-                </Link>
-              </>
-            )}
+            <Link href="/login">
+              <Button variant="ghost">Log in</Button>
+            </Link>
+            <Link href="/register">
+              <Button>Get started</Button>
+            </Link>
           </nav>
         </div>
       </header>
@@ -46,27 +38,18 @@ export default async function HomePage() {
             Create, edit, and export professional resumes. Use AI to improve bullet points
             and generate a strong summary.
           </p>
-          {!session?.user && (
-            <div className="flex gap-4 justify-center flex-wrap">
-              <Link href="/register">
-                <Button size="lg" className="text-base">
-                  Create free account
-                </Button>
-              </Link>
-              <Link href="/login">
-                <Button size="lg" variant="outline" className="text-base">
-                  Log in
-                </Button>
-              </Link>
-            </div>
-          )}
-          {session?.user && (
-            <Link href="/dashboard">
+          <div className="flex gap-4 justify-center flex-wrap">
+            <Link href="/register">
               <Button size="lg" className="text-base">
-                Go to Dashboard
+                Create free account
               </Button>
             </Link>
-          )}
+            <Link href="/login">
+              <Button size="lg" variant="outline" className="text-base">
+                Log in
+              </Button>
+            </Link>
+          </div>
         </div>
       </main>
     </div>
